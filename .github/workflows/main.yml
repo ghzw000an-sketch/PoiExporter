@@ -19,7 +19,11 @@ jobs:
       - name: Compile core and run writer checks
         run: |
           mkdir -p build/core
-          javac -encoding UTF-8 -d build/core app/src/main/java/iq/gis/poiexporter/core/*.java coretest/*.java
+          # البحث الديناميكي عن كافة ملفات الجافا لتفادي خطأ المسار
+          find app/src/main/java -name "*.java" > sources.txt
+          find coretest -name "*.java" >> sources.txt
+          javac -encoding UTF-8 -d build/core @sources.txt
+          
           mkdir -p build/out
           java -cp build/core WritersTest build/out
           test -s build/out/t.geojson && test -s build/out/t.gpx && test -s build/out/t.dxf
