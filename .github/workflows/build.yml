@@ -18,19 +18,22 @@ jobs:
           distribution: temurin
           java-version: '17'
           
-      - uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: '8.9'
-          
-      - name: Generate Gradle Wrapper
-        run: gradle wrapper
-        
-      - name: Make gradlew executable
-        run: chmod +x ./gradlew
+      - name: Extract Project Zip
+        run: |
+          # فك الضغط عن الملف الذي يبدأ اسمه بـ PoiExporter إلى مجلد جديد
+          unzip PoiExporter*.zip -d extracted_project
           
       - name: Build debug APK
-        run: ./gradlew assembleDebug --no-daemon --stacktrace
-        
+        run: |
+          # البحث التلقائي عن مسار مجلد المشروع الفعلي الذي يحتوي على أداة البناء
+          GRADLE_DIR=$(dirname $(find extracted_project -name "gradlew" | head -n 1))
+          echo "Found project root at: $GRADLE_DIR"
+          
+          # الدخول للمجلد، إعطاء الصلاحيات، ثم بدء البناء
+          cd "$GRADLE_DIR"
+          chmod +x ./gradlew
+          ./gradlew assembleDebug --no-daemon --stacktrace
+          
       - uses: actions/upload-artifact@v4
         with:
           name: PoiExporter-debug-apk
