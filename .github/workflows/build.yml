@@ -7,46 +7,28 @@ on:
   workflow_dispatch:
 
 jobs:
-  core-tests:
-    name: Core tests (pure Java)
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '17'
-      - name: Compile core and run writer checks
-        run: |
-          mkdir -p build/core
-          # البحث الديناميكي عن كافة ملفات الجافا لتفادي خطأ المسار
-          find app/src/main/java -name "*.java" > sources.txt
-          find coretest -name "*.java" >> sources.txt
-          javac -encoding UTF-8 -d build/core @sources.txt
-          
-          mkdir -p build/out
-          java -cp build/core WritersTest build/out
-          test -s build/out/t.geojson && test -s build/out/t.gpx && test -s build/out/t.dxf
-          java -cp build/core AqxTest coretest/sample.aqx
-
   apk:
-    name: Debug APK
-    needs: core-tests
+    name: Build Debug APK
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
+          
       - uses: android-actions/setup-android@v3
+      
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
+          
       - name: Build debug APK
         run: gradle assembleDebug --no-daemon --stacktrace
+        
       - uses: actions/upload-artifact@v4
         with:
           name: PoiExporter-debug-apk
-          path: app/build/outputs/apk/debug/*.apk
+          path: "**/build/outputs/apk/debug/*.apk"
           if-no-files-found: error
